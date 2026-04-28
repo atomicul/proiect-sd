@@ -1,2 +1,3 @@
 **/*.o
 /bubble_sort
+/*.csv
