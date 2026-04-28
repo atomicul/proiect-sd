@@ -3,4 +3,10 @@
 /merge_sort
 /insertion_sort
 /quicksort
+/gnome_sort
+/heap_sort
+/intro_sort
+/radix_sort
+/patience_sort
+/quick_sort
 /*.csv
