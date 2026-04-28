@@ -1,3 +1,4 @@
 **/*.o
 /bubble_sort
+/merge_sort
 /*.csv
