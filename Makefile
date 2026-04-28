@@ -4,7 +4,7 @@ ALGORITHMS_DIR = algorithms
 ALGORITHMS = $(notdir $(wildcard $(ALGORITHMS_DIR)/*))
 CSV_FILES = $(ALGORITHMS:%=%.csv)
 
-TEST_OBJECTS = main.o check_sorted.o
+TEST_OBJECTS = main.o check_sorted.o checksum.o
 
 .PHONY: help
 help:
