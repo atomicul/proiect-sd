@@ -2,11 +2,11 @@
 /bubble_sort
 /merge_sort
 /insertion_sort
-/quicksort
+/quicksort_hoare
 /gnome_sort
 /heap_sort
 /intro_sort
 /radix_sort
 /patience_sort
-/quick_sort
+/quicksort_lomuto
 /*.csv
