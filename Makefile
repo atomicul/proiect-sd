@@ -18,7 +18,7 @@ $(CSV_FILES): %.csv: %
 	./test_executable.sh $* $$(find $(ALGORITHMS_DIR)/$* -name "*.in") > $@
 
 $(ALGORITHMS): %: $(ALGORITHMS_DIR)/%/sort.o $(TEST_OBJECTS)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -pthread
 
 .PHONY: clean
 clean:
