@@ -58,7 +58,7 @@ int main(void) {
     pthread_mutex_unlock(&ctx.lock);
     pthread_join(thread, NULL);
 
-    printf("%lu\n", ctx.ticks);
+    printf("%ld\n", (long)ctx.ticks);
 
     if (before_checksum != checksum(buff, size)) {
         return 1;
