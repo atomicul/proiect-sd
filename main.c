@@ -1,3 +1,6 @@
+#include "sortworker.h"
+#include "bufftools.h"
+
 #include <time.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -10,54 +13,19 @@
 #define BUFF_SIZE    10000007
 #define TIMEOUT_SECS 5
 
-bool check_sorted(const int64_t *nums, size_t size);
-void sort(int64_t *nums, size_t size);
-uint64_t checksum(const int64_t *buff, size_t size);
-
 int64_t buff[BUFF_SIZE];
 
-struct sort_ctx {
-    int64_t *buff;
-    size_t   size;
-    bool     done;
-    clock_t  ticks;
-    pthread_mutex_t lock;
-    pthread_cond_t  cond;
-};
-
-static clock_t get_cpu_ticks(void) {
-    struct timespec ts;
-    clock_gettime(CLOCK_THREAD_CPUTIME_ID, &ts);
-    return (clock_t)((long long)ts.tv_sec * CLOCKS_PER_SEC
-                   + (long long)ts.tv_nsec * CLOCKS_PER_SEC / 1000000000LL);
-}
-
-static void *sort_worker(void *arg) {
-    struct sort_ctx *ctx = arg;
-
-    clock_t begin = get_cpu_ticks();
-    sort(ctx->buff, ctx->size);
-    clock_t end = get_cpu_ticks();
-
-    pthread_mutex_lock(&ctx->lock);
-    ctx->ticks = end - begin;
-    ctx->done = true;
-    pthread_cond_signal(&ctx->cond);
-    pthread_mutex_unlock(&ctx->lock);
-    return NULL;
-}
-
 int main(void) {
-    size_t size = 0;
-    for(; size < BUFF_SIZE; size++) {
-        if (scanf("%lld", buff+size) == EOF) {
-            break;
-        }
+    const size_t size = read_buffer(buff, BUFF_SIZE);
+
+    if (size >= BUFF_SIZE) {
+        fprintf(stderr, "Input length too big, exceeds buffer limit of %d\n", BUFF_SIZE);
+        return 2;
     }
 
     const uint64_t before_checksum = checksum(buff, size);
 
-    struct sort_ctx ctx = {
+    SortContext ctx = {
         .buff = buff,
         .size = size,
         .done = false,

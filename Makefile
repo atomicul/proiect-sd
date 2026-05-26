@@ -1,10 +1,10 @@
-CFLAGS := $(CFLAGS) -O3 -g --std=c11
+CFLAGS := $(CFLAGS) -O3 -g --std=c11 -Iinclude
 
 ALGORITHMS_DIR = algorithms
 ALGORITHMS = $(notdir $(wildcard $(ALGORITHMS_DIR)/*))
 CSV_FILES = $(ALGORITHMS:%=%.csv)
 
-TEST_OBJECTS = main.o check_sorted.o checksum.o
+TEST_OBJECTS = main.o src/read_buffer.o src/check_sorted.o src/checksum.o src/sort_worker.o
 
 .PHONY: help
 help:
@@ -22,4 +22,4 @@ $(ALGORITHMS): %: $(ALGORITHMS_DIR)/%/sort.o $(TEST_OBJECTS)
 
 .PHONY: clean
 clean:
-	rm -f *.o algorithms/*/*.o $(ALGORITHMS) $(CSV_FILES)
+	rm -f *algorithms/*/*.o $(TEST_OBJECTS) $(ALGORITHMS) $(CSV_FILES)
