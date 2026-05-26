@@ -7,7 +7,7 @@
 #include <errno.h>
 #include <unistd.h>
 
-#define BUFF_SIZE    100000
+#define BUFF_SIZE    10000007
 #define TIMEOUT_SECS 5
 
 bool check_sorted(const int64_t *nums, size_t size);

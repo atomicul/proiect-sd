@@ -11,16 +11,17 @@ main() {
 
     echo "test_name,input_size,is_correct,cpu_ticks"
 
-    seq 10000 | test sorted
-    seq 10000 -1 1 | test reversed
-    for _ in $(seq 10000); do
-        echo $RANDOM
-    done | test random
-    gen_almost_sorted 10000 | test almost_sorted
-    gen_stepped 10000 | test stepped
-    gen_many_duplicates 10000 | test many_duplicates
-    gen_all_equal 10000 | test all_equal
-    gen_with_negatives 10000 | test with_negatives
+    for i in "small:100" "big:10000" "huge:10000000"; do
+        IFS=':' read prefix size <<<"$i"
+        seq $size | test "${prefix}_sorted"
+        seq $size -1 1 | test "${prefix}_reversed"
+        seq $size | awk '{print int(rand()*9223372036854775807)}' | test "${prefix}_random"
+        gen_almost_sorted $size | test "${prefix}_almost_sorted"
+        gen_stepped $size | test "${prefix}_stepped"
+        gen_many_duplicates $size | test "${prefix}_many_duplicates"
+        gen_all_equal $size | test "${prefix}_all_equal"
+        gen_with_negatives $size | test "${prefix}_with_negatives"
+    done
 
     while [[ $# -gt 0 ]]; do
         name=$(basename $1 .in)
@@ -32,46 +33,53 @@ main() {
 gen_almost_sorted() {
     local n=$1
     local swaps=$((n / 100))
-    local arr=()
-    local i k a b tmp
-    for ((i = 1; i <= n; i++)); do
-        arr+=("$i")
-    done
-    for ((k = 0; k < swaps; k++)); do
-        a=$((RANDOM % n))
-        b=$((RANDOM % n))
-        tmp=${arr[a]}
-        arr[a]=${arr[b]}
-        arr[b]=$tmp
-    done
-    printf '%s\n' "${arr[@]}"
+    seq 1 $n | awk -v swaps="$swaps" -v n="$n" '
+        BEGIN { srand() }
+        {
+            a[NR] = $1
+        }
+        END {
+            for (k = 0; k < swaps; k++) {
+                i = int(rand() * n) + 1
+                j = int(rand() * n) + 1
+                tmp = a[i]
+                a[i] = a[j]
+                a[j] = tmp
+            }
+            for (i = 1; i <= n; i++) {
+                print a[i]
+            }
+        }
+    '
 }
 
 gen_stepped() {
     local n=$1
     local step_up=$((n / 20))
     local step_down=$((step_up / 4))
-    local val=0 count=0 i
-    while ((count < n)); do
-        for ((i = 0; i < step_up && count < n; i++)); do
-            val=$((val + 1))
-            echo $val
-            count=$((count + 1))
-        done
-        for ((i = 0; i < step_down && count < n; i++)); do
-            val=$((val - 1))
-            echo $val
-            count=$((count + 1))
-        done
-    done
+    awk -v n="$n" -v step_up="$step_up" -v step_down="$step_down" '
+        BEGIN {
+            val = 0
+            count = 0
+            while (count < n) {
+                for (i = 0; i < step_up && count < n; i++) {
+                    val++
+                    print val
+                    count++
+                }
+                for (i = 0; i < step_down && count < n; i++) {
+                    val--
+                    print val
+                    count++
+                }
+            }
+        }
+    '
 }
 
 gen_many_duplicates() {
     local n=$1
-    local i
-    for ((i = 0; i < n; i++)); do
-        echo $((RANDOM % 10))
-    done
+    awk -v n="$n" 'BEGIN { srand(); for (i = 0; i < n; i++) print int(rand() * 10) }'
 }
 
 gen_all_equal() {
@@ -81,36 +89,26 @@ gen_all_equal() {
 
 gen_with_negatives() {
     local n=$1
-    local i
-    for ((i = 0; i < n; i++)); do
-        echo $(( (RANDOM % 2 == 0 ? 1 : -1) * RANDOM ))
-    done
+    awk -v n="$n" 'BEGIN { srand(); for (i = 0; i < n; i++) print int(rand()*9223372036854775807) * (rand() < 0.5 ? -1 : 1) }'
 }
 
 test() {
     local name=$1
-    local best_time
     local correct=0
 
-    local input="$(cat -)"
+    local inputfile=$(mktemp)
+    cat - > "$inputfile"
 
-    for i in $(seq 5); do
-        local result
-        result=$(PATH="." ${EXECUTABLE} <<< "$input")
-        local status=$?
+    local result
+    result=$(PATH="." ${EXECUTABLE} < "$inputfile")
+    if [[ $? -eq 0 ]]; then
+        correct=1
+    fi
 
-        if [[ $status -eq 0 ]]; then
-            correct=1
-        fi
+    local count=$(wc -w < "$inputfile" | xargs)
+    echo "$name,$count,$correct,${result:-"-1"}"
 
-        if [[ -z $best_time ]] || [[ $result -lt $best_time ]]
-        then
-            best_time=$result
-        fi
-    done
-
-    local count=$(wc -w <<< "$input" | xargs)
-    echo "$name,$count,$correct,${best_time:-"-1"}"
+    rm "$inputfile"
 }
 
 main "$@"
