@@ -13,8 +13,10 @@ main() {
 
     for i in "small:100" "big:10000" "huge:10000000"; do
         IFS=':' read prefix size <<<"$i"
-        seq $size | test "${prefix}_sorted"
-        seq $size -1 1 | test "${prefix}_reversed"
+        # seq switches to scientific notation (e.g. 1e+07) on large values on macOS,
+        # which scanf("%lld") cannot parse — use awk to guarantee decimal output
+        awk -v n="$size" 'BEGIN { for (i=1; i<=n; i++) print i }' | test "${prefix}_sorted"
+        awk -v n="$size" 'BEGIN { for (i=n; i>=1; i--) print i }' | test "${prefix}_reversed"
         seq $size | awk '{print int(rand()*9223372036854775807)}' | test "${prefix}_random"
         gen_almost_sorted $size | test "${prefix}_almost_sorted"
         gen_stepped $size | test "${prefix}_stepped"
