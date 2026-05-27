@@ -94,19 +94,30 @@ gen_with_negatives() {
 
 test() {
     local name=$1
-    local correct=0
+    local best_time
+    local correct=1
 
     local inputfile=$(mktemp)
     cat - > "$inputfile"
 
-    local result
-    result=$(PATH="." ${EXECUTABLE} < "$inputfile")
-    if [[ $? -eq 0 ]]; then
-        correct=1
-    fi
+    for i in $(seq 5); do
+        local result
+        result=$(PATH="." ${EXECUTABLE} < "$inputfile")
+        local status=$?
+
+        if [[ $status -ne 0 ]]; then
+            correct=0
+            break
+        fi
+
+        if [[ -z $best_time ]] || [[ $result -lt $best_time ]]
+        then
+            best_time=$result
+        fi
+    done
 
     local count=$(wc -w < "$inputfile" | xargs)
-    echo "$name,$count,$correct,${result:-"-1"}"
+    echo "$name,$count,$correct,${best_time:-"-1"}"
 
     rm "$inputfile"
 }
