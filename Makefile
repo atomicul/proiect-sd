@@ -1,4 +1,4 @@
-CFLAGS := $(CFLAGS) -O3 -g --std=c11 -Iinclude
+CFLAGS := $(CFLAGS) -O3 -g --std=c11 -D_POSIX_C_SOURCE=200809L -Iinclude
 
 ALGORITHMS_DIR = algorithms
 ALGORITHMS = $(notdir $(wildcard $(ALGORITHMS_DIR)/*))
